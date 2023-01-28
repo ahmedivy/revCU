@@ -3,13 +3,6 @@ from bs4 import BeautifulSoup
 from datetime import datetime, date
 
 
-cookie = "1vlaqiupbae3h5h0jhvhky30"
-
-# url = "https://cuonline.cuilahore.edu.pk:8091/Courses/Index"
-url = "https://cuonline.cuilahore.edu.pk:8091/MarksSummary/Index"
-
-
-
 class User():
     
     def __init__(self, username, password):
