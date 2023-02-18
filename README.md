@@ -1,5 +1,5 @@
 # Reverse Engineering of COMSATS Portal
 
-### Repo Structure:
+<!-- ### Repo Structure:
 
-![Repo Visualization](./diagram.svg)
+![Repo Visualization](./diagram.svg) -->
