@@ -13,7 +13,6 @@ import undetected_chromedriver as uc
 class Chrome(uc.Chrome):
     def __del__(self) -> None:
         self.quit()
-        
 
 
 class User:
@@ -38,14 +37,15 @@ class Spider:
         self.session = tls_client.Session(
             client_identifier="chrome_108",
         )
-        
+
     def login(self):
         driver = Chrome(options=self.__getChromeOptions())
+        webdriver.Chrome()
 
-    def setCourse(self, course):
+    async def setCourse(self, course):
         url = f"https://cuonline.cuilahore.edu.pk:8091/Courses/SetCourse/{course}"
         try:
-            requests.get(
+            await requests.get(
                 url, headers=self.__getHeaders(), cookies=self.__generateCookies()
             )
         except TooManyRedirects:
