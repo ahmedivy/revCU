@@ -1,4 +1,6 @@
 from enum import Enum
+from rich.table import Table
+from rich.console import Console
 
 
 class Course:
@@ -46,3 +48,37 @@ class Course:
 
     def set_marks(self, marks: list):
         self.marks = marks
+
+    def print_marks(self):
+        console = Console()
+        console.print(f"[bold magenta]{self.code} - {self.name}[/bold magenta]")
+        if len(self.marks) == 0:
+            console.print("[bold red italic]No Marks Found[/bold red italic]")
+            return
+        table = Table("Title", "Obtained", "Total", "Date")
+        for mark in self.marks:
+            table.add_row(
+                mark.title,
+                str(mark.obtained),
+                str(mark.total),
+                str(mark.date),
+            )
+        console.print(table)
+
+    @classmethod
+    def print_courses(cls, courses: list):
+        console = Console()
+        console.print(f"[bold magenta]Courses[/bold magenta]")
+        table = Table("Code", "Name", "Credits", "Attendance")
+        for course in courses:
+            attendance = f'Theory: {course.attendance["theory"]}%'
+            if course.type == cls.Type.PRACTICAL:
+                attendance += f' - Practical: {course.attendance["practical"]}%'
+
+            table.add_row(
+                course.code,
+                course.name,
+                str(course.credit),
+                attendance,
+            )
+        console.print(table)

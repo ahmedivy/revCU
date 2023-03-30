@@ -8,13 +8,12 @@ from bs4 import BeautifulSoup
 from requests.exceptions import TooManyRedirects
 from playwright.async_api import async_playwright
 
-from models import Course, Marks
+from .models import Course, Marks
 
 
 BASE_URL = "https://cuonline.cuilahore.edu.pk:8091/"
 
 dotenv.load_dotenv()
-logging.basicConfig(level=logging.INFO)
 
 
 class Spider:
@@ -57,6 +56,7 @@ class Spider:
             for row in body.find_all("tr"):
                 marks = Marks(row)
                 marks_list.append(marks)
+        return marks_list
 
     def scrape_dashboard(self):
         """
