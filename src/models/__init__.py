@@ -1,2 +1,2 @@
-from course import Course
-from marks import Marks
+from .course import Course
+from .marks import Marks
