@@ -1,5 +1,2 @@
-# Reverse Engineering of COMSATS Portal
+# revCU
 
-<!-- ### Repo Structure:
-
-![Repo Visualization](./diagram.svg) -->
