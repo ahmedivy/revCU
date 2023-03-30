@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 
 class Marks:
@@ -7,11 +7,11 @@ class Marks:
             raise Exception("No HTML provided")
 
         # Extract Marks
-        title, obtained, total, _date = html.find_all("td")
+        title, obtained, total, date = html.find_all("td")
         self.title = title.text.strip()
-        self.obtained = int(obtained.text.strip())
-        self.total = int(total.text.strip())
-        self.date = date.fromisoformat(_date.text.strip())
+        self.obtained = float(obtained.text.strip())
+        self.total = float(total.text.strip())
+        self.date = datetime.strptime(date.text.strip(), "%A, %d %B %Y").date()
 
     def __str__(self):
         return f"{self.title} - {self.obtained}/{self.total} - {self.date}"
