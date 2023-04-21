@@ -2,6 +2,8 @@ from enum import Enum
 from rich.table import Table
 from rich.console import Console
 
+from .marks import Marks
+
 
 class Course:
     """
@@ -14,8 +16,8 @@ class Course:
         PRACTICAL = 2
 
     def __init__(self, html=None):
-        if html is None:
-            raise Exception("No HTML provided")
+        if not html:
+            return
 
         # Extract ID
         self.id = int(html["onclick"].split("/")[-1].strip("'"))
@@ -39,6 +41,8 @@ class Course:
         if self.type == self.Type.PRACTICAL:
             lab = attendance.find("div", {"title": "Lab Attendance"})
             self.attendance["practical"] = int(lab.get("aria-valuenow")) if lab else 0
+        else:
+            self.attendance["practical"] = None
 
         # Set Marks to None
         self.marks = []
@@ -82,3 +86,28 @@ class Course:
                 attendance,
             )
         console.print(table)
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "code": self.code,
+            "name": self.name,
+            "credit": self.credit,
+            "professor": self.professor,
+            "type": self.type.name,
+            "attendance": self.attendance,
+            "marks": [marks.to_json() for marks in self.marks],
+        }
+
+    @classmethod
+    def from_json(cls, json_dict: dict):
+        course = cls()
+        course.id = json_dict.get("id")
+        course.code = json_dict.get("code")
+        course.name = json_dict.get("name")
+        course.credit = json_dict.get("credit")
+        course.professor = dict.get("professor")
+        course.type = cls.Type[json_dict.get("type")]
+        course.attendance = json_dict.get("attendance")
+        course.set_marks([Marks.from_json(mark) for mark in json_dict.get("marks")])
+        return course

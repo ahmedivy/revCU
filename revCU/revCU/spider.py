@@ -1,17 +1,19 @@
 import os
 import re
+import json
 import dotenv
 import logging
 import requests
 
 from bs4 import BeautifulSoup
 from requests.exceptions import TooManyRedirects
-from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright
 
 from .models import Course, Marks
 
 
 BASE_URL = "https://cuonline.cuilahore.edu.pk:8091/"
+FILES_PATH = os.path.join(os.path.expanduser("~"), ".revCU")
 
 dotenv.load_dotenv()
 
@@ -23,10 +25,33 @@ class Spider:
     """
 
     def __init__(self):
-        self.config: dict
+        self.config = self.read_config()
         self.cookies = dict
         self.session = requests.Session()
         self.courses = []
+
+    def read_config(self):
+        path = os.path.join(FILES_PATH, "config.json")
+        if not os.path.exists(FILES_PATH):
+            os.mkdir(FILES_PATH)
+        if not os.path.exists(path):
+            return {}
+        with open(path) as f:
+            return json.load(f)
+
+    def write_config(self):
+        path = os.path.join(FILES_PATH, "config.json")
+        with open(path, "w") as f:
+            json.dump(self.config, f, indent=4)
+
+    def read_marks(self):
+        path = os.path.join(FILES_PATH, "marks.json")
+        if not os.path.exists(path):
+            pass
+        with open(path) as f:
+            temp = json.load(f)
+            for course in temp["courses"]:
+                self.courses.append(Course.from_json(course))
 
     def set_course(self, course_id: int):
         """
@@ -54,7 +79,7 @@ class Spider:
         marks_list = []
         for body in soup.find_all("tbody"):
             for row in body.find_all("tr"):
-                marks = Marks(row)
+                marks = Marks(html=row)
                 marks_list.append(marks)
         return marks_list
 
@@ -68,31 +93,31 @@ class Spider:
             course = Course(row)
             self.courses.append(course)
 
-    async def get_cookies(self):
+    def get_cookies(self):
         """
         Gets the ASP.NET_SessionId cookie from the browser.
         """
-        async with async_playwright() as p:
+        with sync_playwright() as p:
             # Launch browser and go to the base url
-            browser = await p.chromium.launch(headless=False)
-            page = await browser.new_page()
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page()
             logging.info("Launched Chromium")
 
             # Go to base url
-            await page.goto(BASE_URL)
+            page.goto(BASE_URL)
             logging.info("Navigated to base url")
 
             # Login
-            await page.locator(".close").click()
-            await page.locator("#MaskedRegNo").type(os.getenv("REG_NO"))
-            await page.locator("#Password").type(os.getenv("PASSWORD"))
-            await self.solve_recaptcha(page.frame(url=re.compile("recaptcha")))
-            await page.click('button:has-text("Login")')
+            page.locator(".close").click()
+            page.locator("#MaskedRegNo").type(os.getenv("REG_NO"))
+            page.locator("#Password").type(os.getenv("PASSWORD"))
+            self.solve_recaptcha(page.frame(url=re.compile("recaptcha")))
+            page.click('button:has-text("Login")')
             logging.debug("Logged in")
 
             # Get ASP.NET_SessionId cookie
-            await page.wait_for_load_state("networkidle")
-            cookies = await page.context.cookies()
+            page.wait_for_load_state("networkidle")
+            cookies = page.context.cookies()
             asp_cookie = next(
                 (cookie for cookie in cookies if cookie["name"] == "ASP.NET_SessionId"),
                 None,
@@ -101,15 +126,15 @@ class Spider:
                 logging.info("Cookie Found")
                 self.cookies = {asp_cookie["name"]: asp_cookie["value"]}
                 self.session.cookies.update(self.cookies)
-            await browser.close()
+            browser.close()
             logging.info("Closed Browser")
 
-    async def solve_recaptcha(self, frame):
+    def solve_recaptcha(self, frame):
         """
         Waits until user solves the recaptcha.
         """
-        await frame.locator("#recaptcha-anchor-label").click()
-        await frame.wait_for_function(
+        frame.locator("#recaptcha-anchor-label").click()
+        frame.wait_for_function(
             '() => document.querySelector("#recaptcha-accessible-status")'
             '.textContent.includes("You are verified")'
         )
@@ -126,9 +151,8 @@ class Spider:
             course.set_marks(self.get_marks())
             yield course
 
-    async def __aenter__(self):
-        await self.get_cookies()
+    def __enter__(self):
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         return self.session.close()
