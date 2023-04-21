@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "revcu"
+version = "0.1.0"
+description = "Command line app for COMSATS Portal"
+authors = ["ahmed <ahmadabdullah4919@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.scripts]
+revCU = "revcu.main:main"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
